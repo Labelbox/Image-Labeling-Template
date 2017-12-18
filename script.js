@@ -14,9 +14,25 @@ function sendGQLQuery(query) {
     });
 }
 
+function readQueryParams() {
+  var query_string = {};
+  var query = window.location.search.substring(1);
+  var vars = query.split("&");
+  for (var i=0;i<vars.length;i++) {
+    var pair = vars[i].split("=");
+    if (typeof query_string[pair[0]] === "undefined") {
+      query_string[pair[0]] = pair[1];
+    } else if (typeof query_string[pair[0]] === "string") {
+      var arr = [ query_string[pair[0]], pair[1] ];
+      query_string[pair[0]] = arr;
+    } else {
+      query_string[pair[0]].push(pair[1]);
+    }
+  }
+  return query_string;
+};
 
 function getNextRowToLabel(projectId) {
-    console.log(projectId)
     const getNextRowToLabelQuery = `
       query {
         getNextRowToLabel(projectId:"${projectId}") {
@@ -26,7 +42,6 @@ function getNextRowToLabel(projectId) {
       }
     `;
     return sendGQLQuery(getNextRowToLabelQuery).then((res) => {
-        console.log(res)
         return res.data.getNextRowToLabel;
     });
 }
@@ -37,7 +52,7 @@ function submitLabel(projectId, rowId, label) {
       mutation {
         createLabel(
           label: "${label}",
-          secondsToLabel:5,
+          secondsToLabel: 5,
           dataRowId: "${rowId}",
           projectId: "${projectId}"
         ) {
@@ -52,8 +67,7 @@ function submitLabelAndPullNextRowToLabel(projectId){
     let currentItem;
     const nextItem = () => {
       getNextRowToLabel(projectId).then((res) => {
-          // probably pass this in
-          qs('#item-to-label').innerHTML = `<img src="${res.rowData}" style="width: 300px;"></img>`
+          document.querySelector('#item-to-label').innerHTML = `<img src="${res.rowData}" style="width: 300px;"></img>`
           currentItem = res;
       });
     }
@@ -63,11 +77,14 @@ function submitLabelAndPullNextRowToLabel(projectId){
     }
 }
 
-// TODO put this in query param or someting
-const projectId = "cjb8yu3ly684j0130ant66eef";
-const next = submitLabelAndPullNextRowToLabel(projectId);
+const queryParams = readQueryParams();
+console.log(queryParams)
+if (!queryParams.projectId){
+    document.body.innerHTML = 'Error: Please provide projectId as a query param';
+    window.stop();
+}
 
-const qs = document.querySelector.bind(document)
-qs('#good').addEventListener('click', () => next('good'))
-qs('#bad').addEventListener('click', () => next('bad'))
+const next = submitLabelAndPullNextRowToLabel(queryParams.projectId);
+document.querySelector('#good').addEventListener('click', () => next('good'))
+document.querySelector('#bad').addEventListener('click', () => next('bad'))
 
