@@ -66,9 +66,13 @@ function submitLabel(projectId, rowId, label) {
 function submitLabelAndPullNextRowToLabel(projectId){
     let currentItem;
     const nextItem = () => {
-      getNextRowToLabel(projectId).then((res) => {
-          document.querySelector('#item-to-label').innerHTML = `<img src="${res.rowData}" style="width: 300px;"></img>`
-          currentItem = res;
+      getNextRowToLabel(projectId).then((nextItem) => {
+          if (!nextItem){
+              document.body.innerHTML = 'Success! No more items to label in this project!';
+              window.stop();
+          }
+          document.querySelector('#item-to-label').innerHTML = `<img src="${nextItem.rowData}" style="width: 300px;"></img>`
+          currentItem = nextItem;
       });
     }
     nextItem()
@@ -78,7 +82,6 @@ function submitLabelAndPullNextRowToLabel(projectId){
 }
 
 const queryParams = readQueryParams();
-console.log(queryParams)
 if (!queryParams.projectId){
     document.body.innerHTML = 'Error: Please provide projectId as a query param';
     window.stop();
