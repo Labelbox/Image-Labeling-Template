@@ -1,17 +1,17 @@
 function sendGQLQuery(query) {
-    return fetch('https://api.graph.cool/simple/v1/cjayy2nck0l130161d8nyt98u', {
-        method: 'POST',
-        body: JSON.stringify({query: query}),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    }).then((res) => {
-        if (res.ok) {
-            return res.json();
-        } else {
-            return res.text();
-        }
-    });
+  return fetch('https://api.graph.cool/simple/v1/cjayy2nck0l130161d8nyt98u', {
+    method: 'POST',
+    body: JSON.stringify({query: query}),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }).then((res) => {
+    if (res.ok) {
+      return res.json();
+    } else {
+      return res.text();
+    }
+  });
 }
 
 function readQueryParams() {
@@ -33,7 +33,7 @@ function readQueryParams() {
 };
 
 function getNextRowToLabel(projectId) {
-    const getNextRowToLabelQuery = `
+  const getNextRowToLabelQuery = `
       query {
         getNextRowToLabel(projectId:"${projectId}") {
           id,
@@ -41,14 +41,14 @@ function getNextRowToLabel(projectId) {
         }
       }
     `;
-    return sendGQLQuery(getNextRowToLabelQuery).then((res) => {
-        return res.data.getNextRowToLabel;
-    });
+  return sendGQLQuery(getNextRowToLabelQuery).then((res) => {
+    return res.data.getNextRowToLabel;
+  });
 }
 
 function submitLabel(projectId, rowId, label) {
-    // TODO work on seconds to label
-    const labelRowMutation = `
+  // TODO work on seconds to label
+  const labelRowMutation = `
       mutation {
         createLabel(
           label: "${label}",
@@ -60,28 +60,28 @@ function submitLabel(projectId, rowId, label) {
         }
       }
     `;
-    return sendGQLQuery(labelRowMutation);
+  return sendGQLQuery(labelRowMutation);
 }
 
 function submitLabelAndPullNextRowToLabel(projectId){
-    let currentItem;
-    const nextItem = () => {
-      getNextRowToLabel(projectId).then((nextItem) => {
-          if (!nextItem){
-              document.body.innerHTML = 'Success! No more items to label in this project!';
-          }
-          document.querySelector('#item-to-label').innerHTML = `<img src="${nextItem.rowData}" style="width: 300px;"></img>`
-          currentItem = nextItem;
-      });
-    }
-    nextItem()
-    return function setLabel(label){
-        submitLabel(projectId, currentItem.id, label).then(nextItem);
-    }
+  let currentItem;
+  const nextItem = () => {
+    getNextRowToLabel(projectId).then((nextItem) => {
+      if (!nextItem){
+        document.body.innerHTML = 'Success! No more items to label in this project!';
+      }
+      document.querySelector('#item-to-label').innerHTML = `<img src="${nextItem.rowData}" style="width: 300px;"></img>`;
+      currentItem = nextItem;
+    });
+  };
+  nextItem();
+  return function setLabel(label){
+    submitLabel(projectId, currentItem.id, label).then(nextItem);
+  };
 }
 
 const queryParams = readQueryParams();
 const next = submitLabelAndPullNextRowToLabel(queryParams.projectId);
-document.querySelector('#good').addEventListener('click', () => next('good'))
-document.querySelector('#bad').addEventListener('click', () => next('bad'))
+document.querySelector('#good').addEventListener('click', () => next('good'));
+document.querySelector('#bad').addEventListener('click', () => next('bad'));
 
