@@ -1,5 +1,5 @@
 function sendGQLQuery(query) {
-  return fetch('https://api.graph.cool/simple/v1/cjayy2nck0l130161d8nyt98u', {
+  return fetch('http://localhost:60000/simple/v1/cjbo0nvfh000901956pz6y6tw', {
     method: 'POST',
     body: JSON.stringify({query: query}),
     headers: {
@@ -35,17 +35,36 @@ function readQueryParams() {
 function getNextRowToLabel(projectId) {
   const getNextRowToLabelQuery = `
       query {
-        getNextRowToLabel(projectId:"${projectId}") {
-          id,
-          rowData,
+        Project(id: "${projectId}"){
+          datasets(filter:{dataRows_some:{labels_none:{}}},first:1) {
+            dataRows(filter:{labels_none:{}}, first:1) {
+              id,
+              rowData,
+              labels {
+                id
+              }
+            }
+          }
         }
       }
     `;
   return sendGQLQuery(getNextRowToLabelQuery).then((res) => {
+
+
     if (res.errors){
+      if (res.errors.some((err) => err.code === 3008)){
+        throw new Error('Permission Denied');
+      }
       throw new Error(JSON.stringify(res.errors));
     }
-    return res.data.getNextRowToLabel;
+
+    if (!res.Project || !res.Project.datasets[0] || !res.Project.datasets[0].dataRows[0]) {
+      console.log('NO more items to label!');
+      return {};
+    }
+
+    const {id, rowData} = res.Project.datasets[0].dataRows[0];
+    return { id, rowData };
   });
 }
 
@@ -76,8 +95,7 @@ function submitLabelAndPullNextRowToLabel(projectId){
       document.querySelector('#item-to-label').innerHTML = `<img src="${nextItem.rowData}" style="width: 300px;"></img>`;
       currentItem = nextItem;
     }, (err) => {
-      console.log(err);
-      document.body.innerHTML = 'An error has occured.';
+      document.body.innerHTML = err;
     });
   };
   fetchNextItem();
