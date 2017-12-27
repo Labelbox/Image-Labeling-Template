@@ -42,6 +42,9 @@ function getNextRowToLabel(projectId) {
       }
     `;
   return sendGQLQuery(getNextRowToLabelQuery).then((res) => {
+    if (res.errors){
+      throw new Error(JSON.stringify(res.errors));
+    }
     return res.data.getNextRowToLabel;
   });
 }
@@ -65,18 +68,21 @@ function submitLabel(projectId, rowId, label) {
 
 function submitLabelAndPullNextRowToLabel(projectId){
   let currentItem;
-  const nextItem = () => {
+  const fetchNextItem = () => {
     getNextRowToLabel(projectId).then((nextItem) => {
       if (!nextItem){
         document.body.innerHTML = 'Success! No more items to label in this project!';
       }
       document.querySelector('#item-to-label').innerHTML = `<img src="${nextItem.rowData}" style="width: 300px;"></img>`;
       currentItem = nextItem;
+    }, (err) => {
+      console.log(err);
+      document.body.innerHTML = 'An error has occured.';
     });
   };
-  nextItem();
+  fetchNextItem();
   return function setLabel(label){
-    submitLabel(projectId, currentItem.id, label).then(nextItem);
+    submitLabel(projectId, currentItem.id, label).then(fetchNextItem);
   };
 }
 
