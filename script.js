@@ -1,20 +1,4 @@
-function sendGQLQuery(query) {
-  return fetch('http://localhost:60000/simple/v1/cjbo0nvfh000901956pz6y6tw', {
-    method: 'POST',
-    body: JSON.stringify({query: query}),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  }).then((res) => {
-    if (res.ok) {
-      return res.json();
-    } else {
-      return res.text();
-    }
-  });
-}
-
-function readQueryParams() {
+function getQueryParam(name) {
   var query_string = {};
   var query = window.location.search.substring(1);
   var vars = query.split("&");
@@ -29,8 +13,39 @@ function readQueryParams() {
       query_string[pair[0]].push(pair[1]);
     }
   }
-  return query_string;
+  return query_string[name];
 };
+
+function getToken(){
+  const token = getQueryParam('token');
+  if (token){
+    window.localStroage.setItem('labelbox-jwt', token);
+  }
+  return window.localStorage.getItem('labelbox-jwt');
+}
+
+function sendGQLQuery(query) {
+  return fetch('http://localhost:60000/simple/v1/cjbo0nvfh000901956pz6y6tw', {
+    method: 'POST',
+    body: JSON.stringify({query: query}),
+    headers: {
+      'Content-Type': 'application/json',
+      'authorization': token ? `Bearer ${token}` : null
+    }
+  }).then((res) => {
+    if (res.ok) {
+      return res.json();
+    } else {
+      return res.text();
+    }
+  });
+}
+
+const token = getToken();
+console.log(token);
+if (!token) {
+  window.location.href = 'http://localhost:3000/signin?redirect='+window.location.href;
+}
 
 function getNextRowToLabel(projectId) {
   const getNextRowToLabelQuery = `
@@ -104,8 +119,7 @@ function submitLabelAndPullNextRowToLabel(projectId){
   };
 }
 
-const queryParams = readQueryParams();
-const next = submitLabelAndPullNextRowToLabel(queryParams.projectId);
+const next = submitLabelAndPullNextRowToLabel(getQueryParam('projectId'));
 document.querySelector('#good').addEventListener('click', () => next('good'));
 document.querySelector('#bad').addEventListener('click', () => next('bad'));
 
