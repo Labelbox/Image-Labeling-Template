@@ -19,7 +19,7 @@ function getQueryParam(name) {
 function getToken(){
   const token = getQueryParam('token');
   if (token){
-    window.localStroage.setItem('labelbox-jwt', token);
+    window.localStorage.setItem('labelbox-jwt', token);
   }
   return window.localStorage.getItem('labelbox-jwt');
 }
@@ -63,9 +63,8 @@ function getNextRowToLabel(projectId) {
         }
       }
     `;
+
   return sendGQLQuery(getNextRowToLabelQuery).then((res) => {
-
-
     if (res.errors){
       if (res.errors.some((err) => err.code === 3008)){
         throw new Error('Permission Denied');
