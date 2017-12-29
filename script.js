@@ -42,7 +42,6 @@ function sendGQLQuery(query) {
 }
 
 const token = getToken();
-console.log(token);
 if (!token) {
   window.location.href = 'http://localhost:3000/signin?redirect='+window.location.href;
 }
