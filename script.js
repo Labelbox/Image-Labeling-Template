@@ -41,11 +41,6 @@ function sendGQLQuery(query) {
   });
 }
 
-const token = getToken();
-if (!token) {
-  window.location.href = 'http://localhost:3000/signin?redirect='+window.location.href;
-}
-
 function getNextRowToLabel(projectId) {
   const getNextRowToLabelQuery = `
       query {
@@ -117,7 +112,16 @@ function submitLabelAndPullNextRowToLabel(projectId){
   };
 }
 
-const next = submitLabelAndPullNextRowToLabel(getQueryParam('projectId'));
+const token = getToken();
+const projectId = getQueryParam('projectId');
+if (!projectId){
+  document.body.innerHTML = 'Error: Please pass projectId in as a query param.';
+  window.stop();
+}
+if (!token) {
+  window.location.href = 'http://localhost:3000/signin?redirect_project='+projectId;
+}
+const next = submitLabelAndPullNextRowToLabel(projectId);
 document.querySelector('#good').addEventListener('click', () => next('good'));
 document.querySelector('#bad').addEventListener('click', () => next('bad'));
 
