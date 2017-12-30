@@ -113,7 +113,7 @@ function submitLabelAndPullNextRowToLabel(projectId){
 }
 
 const token = getToken();
-const projectId = getQueryParam('projectId');
+const projectId = getQueryParam('project');
 if (!projectId){
   document.body.innerHTML = 'Error: Please pass projectId in as a query param.';
   window.stop();
