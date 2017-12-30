@@ -25,6 +25,7 @@ function getToken(){
 }
 
 function sendGQLQuery(query) {
+  const token = getToken();
   return fetch('http://localhost:60000/simple/v1/cjbo0nvfh000901956pz6y6tw', {
     method: 'POST',
     body: JSON.stringify({query: query}),
@@ -55,6 +56,12 @@ function getNextRowToLabel(projectId) {
             }
           }
         }
+        user {
+          id,
+          organization {
+            id
+          }
+        }
       }
     `;
 
@@ -72,17 +79,18 @@ function getNextRowToLabel(projectId) {
     }
 
     const project = res.data.Project;
+    const user = res.data.user;
     if (!project.datasets[0] || !project.datasets[0].dataRows[0]) {
       document.body.innerHTML = 'No more items to label!';
       return {};
     }
 
     const {id, rowData} = project.datasets[0].dataRows[0];
-    return { id, rowData };
+    return { id, rowData, userId: user.id, organizationId: user.organization.id };
   });
 }
 
-function submitLabel(projectId, rowId, label) {
+function submitLabel({projectId, rowId, label, userId, organizationId}) {
   // TODO work on seconds to label
   const labelRowMutation = `
       mutation {
@@ -91,6 +99,8 @@ function submitLabel(projectId, rowId, label) {
           secondsToLabel: 5,
           dataRowId: "${rowId}",
           projectId: "${projectId}"
+          createdById: "${userId}"
+          organizationId: "${organizationId}"
         ) {
           id
         }
@@ -101,8 +111,12 @@ function submitLabel(projectId, rowId, label) {
 
 function submitLabelAndPullNextRowToLabel(projectId){
   let currentItem;
+  let organizationId;
+  let userId;
   const fetchNextItem = () => {
     getNextRowToLabel(projectId).then((nextItem) => {
+      organizationId = nextItem.organizationId;
+      userId = nextItem.userId;
       if (!nextItem){
         document.body.innerHTML = 'Success! No more items to label in this project!';
       }
@@ -114,7 +128,13 @@ function submitLabelAndPullNextRowToLabel(projectId){
   };
   fetchNextItem();
   return function setLabel(label){
-    submitLabel(projectId, currentItem.id, label).then(fetchNextItem);
+    submitLabel({
+      projectId,
+      rowId: currentItem.id,
+      label,
+      organizationId,
+      userId
+    }).then(fetchNextItem);
   };
 }
 
