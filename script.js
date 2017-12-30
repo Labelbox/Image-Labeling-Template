@@ -66,12 +66,18 @@ function getNextRowToLabel(projectId) {
       throw new Error(JSON.stringify(res.errors));
     }
 
-    if (!res.Project || !res.Project.datasets[0] || !res.Project.datasets[0].dataRows[0]) {
-      console.log('NO more items to label!');
+    if (!res.data.Project) {
+      document.body.innerHTML = 'Project not found.';
       return {};
     }
 
-    const {id, rowData} = res.Project.datasets[0].dataRows[0];
+    const project = res.data.Project;
+    if (!project.datasets[0] || !project.datasets[0].dataRows[0]) {
+      document.body.innerHTML = 'No more items to label!';
+      return {};
+    }
+
+    const {id, rowData} = project.datasets[0].dataRows[0];
     return { id, rowData };
   });
 }
