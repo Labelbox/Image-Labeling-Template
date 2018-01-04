@@ -33,7 +33,7 @@ function getToken(){
 
 function sendGQLQuery(query) {
   const token = getToken();
-  return fetch('http://localhost:60000/simple/v1/cjbo0nvfh000901956pz6y6tw', {
+  return fetch('https://api.graph.cool/simple/v1/cjayy2nck0l130161d8nyt98u', {
     method: 'POST',
     body: JSON.stringify({query: query}),
     headers: {
@@ -157,7 +157,7 @@ if (!projectId){
   window.stop();
 }
 if (!token) {
-  window.location.href = 'http://localhost:3000/signin?redirect_project='+projectId;
+  window.location.href = 'https://labelbox.now.sh/signin?redirect_project='+projectId;
 }
 const next = submitLabelAndPullNextRowToLabel(projectId);
 document.querySelector('#good').addEventListener('click', () => next('good'));
