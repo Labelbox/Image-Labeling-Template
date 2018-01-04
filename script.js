@@ -16,6 +16,13 @@ function getQueryParam(name) {
   return query_string[name];
 };
 
+function startTimer(){
+  const start = new Date();
+  return () => {
+    return (new Date() - start) / 1000;
+  };
+}
+
 function getToken(){
   const token = getQueryParam('token');
   if (token){
@@ -82,7 +89,7 @@ function getNextRowToLabel(projectId) {
     const user = res.data.user;
     if (!project.datasets[0] || !project.datasets[0].dataRows[0]) {
       document.body.innerHTML = 'No more items to label!';
-      return {};
+      return undefined;
     }
 
     const {id, rowData} = project.datasets[0].dataRows[0];
@@ -90,13 +97,13 @@ function getNextRowToLabel(projectId) {
   });
 }
 
-function submitLabel({projectId, rowId, label, userId, organizationId}) {
+function submitLabel({projectId, rowId, label, userId, organizationId, secondsToLabel}) {
   // TODO work on seconds to label
   const labelRowMutation = `
       mutation {
         createLabel(
           label: "${label}",
-          secondsToLabel: 5,
+          secondsToLabel: ${secondsToLabel},
           dataRowId: "${rowId}",
           projectId: "${projectId}"
           createdById: "${userId}"
@@ -113,15 +120,18 @@ function submitLabelAndPullNextRowToLabel(projectId){
   let currentItem;
   let organizationId;
   let userId;
+  let getPassedTime;
   const fetchNextItem = () => {
     getNextRowToLabel(projectId).then((nextItem) => {
-      organizationId = nextItem.organizationId;
-      userId = nextItem.userId;
       if (!nextItem){
         document.body.innerHTML = 'Success! No more items to label in this project!';
+        return;
       }
+      organizationId = nextItem.organizationId;
+      userId = nextItem.userId;
       document.querySelector('#item-to-label').innerHTML = `<img src="${nextItem.rowData}" style="width: 300px;"></img>`;
       currentItem = nextItem;
+      getPassedTime = startTimer();
     }, (err) => {
       document.body.innerHTML = err;
     });
@@ -133,7 +143,8 @@ function submitLabelAndPullNextRowToLabel(projectId){
       rowId: currentItem.id,
       label,
       organizationId,
-      userId
+      userId,
+      secondsToLabel: getPassedTime()
     }).then(fetchNextItem);
   };
 }
