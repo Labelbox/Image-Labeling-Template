@@ -127,10 +127,11 @@ function submitLabelAndPullNextRowToLabel(projectId){
         document.body.innerHTML = 'Success! No more items to label in this project!';
         return;
       }
+      document.querySelector('#item-to-label').innerHTML = `<img src="${nextItem.rowData}" style="width: 300px;"></img>`;
+
+      currentItem = nextItem;
       organizationId = nextItem.organizationId;
       userId = nextItem.userId;
-      document.querySelector('#item-to-label').innerHTML = `<img src="${nextItem.rowData}" style="width: 300px;"></img>`;
-      currentItem = nextItem;
       getPassedTime = startTimer();
     }, (err) => {
       document.body.innerHTML = err;
